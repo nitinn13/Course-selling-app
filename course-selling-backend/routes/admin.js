@@ -1,6 +1,6 @@
 const {Router} = require("express");
 const adminRouter = Router();
-const {adminModel, courseModel} = require("../db")
+const {adminModel, courseModel, courseSectionModel} = require("../db")
 const bcrypt = require("bcrypt");
 const { z } = require("zod");
 const jwt = require("jsonwebtoken")
@@ -67,7 +67,7 @@ adminRouter.get('/profile', adminMiddleware, async (req, res) => {
     }
 });
 
-adminRouter.post('/course', adminMiddleware, async (req, res) => {
+adminRouter.post('/create-course', adminMiddleware, async (req, res) => {
     const adminId = req.userId;
     const { title , description, imageUrl, price } = req.body
 
@@ -77,7 +77,7 @@ adminRouter.post('/course', adminMiddleware, async (req, res) => {
         courseId : course._id
     })
 });
-adminRouter.put('/course', adminMiddleware, async (req, res) => {
+adminRouter.put('/update-course', adminMiddleware, async (req, res) => {
     const adminId = req.userId;
     const { title , description, imageUrl, price, courseId } = req.body
 
@@ -97,6 +97,37 @@ adminRouter.put('/course', adminMiddleware, async (req, res) => {
         courseId : course._id
     })
 });
+
+
+
+adminRouter.post('/create-section', adminMiddleware, async (req, res) => {
+    try{
+        const {title , courseId} = req.body
+        const section = await courseSectionModel.create({title , courseId})
+        res.json({
+            message : "section created",
+            sectionId : section._id
+        })
+    }
+    catch(error){
+        res.status(500).json({ message: "Internal server error", error: error.message });
+    }
+})
+
+adminRouter.get('/sections', adminMiddleware, async (req, res) => {
+    try{
+        const {courseId} = req.body;
+        const sections = await courseSectionModel.find({courseId})
+        res.json({
+            message : "all sections",
+            sections
+        })
+    }
+    catch{
+        res.status(500).json({ message: "Internal server error", error: error.message });
+    }
+})
+
 adminRouter.get('/course/bulk', adminMiddleware, async (req, res) => {
     const adminId = req.userId;
     const courses = await courseModel.find({
